@@ -12,9 +12,14 @@ namespace AuthProjectAPI.Routes
 
             personRoute.MapPost("", async (PersonRequest request, PersonContext context) =>
             {
-                var person = new PersonModel(request.name);
+                if (!request.IsValid())
+                    return Results.BadRequest("Invalid request data.");
+
+                var person = new PersonModel(request.name, request.lastName);
+
                 await context.AddAsync(person);
                 await context.SaveChangesAsync();
+                return Results.Ok();
             });
 
             personRoute.MapGet("", async (PersonContext context) =>
@@ -29,8 +34,11 @@ namespace AuthProjectAPI.Routes
 
                 if (person == null)
                     return Results.NotFound();
-                
-                person.ChangeName(request.name);
+
+                if (!request.IsValid())
+                    return Results.BadRequest("Invalid request data.");
+
+                person.ChangeName(request.name, request.lastName);
                 await context.SaveChangesAsync();
                 return Results.Ok(person);
 
@@ -46,7 +54,6 @@ namespace AuthProjectAPI.Routes
                 context.Remove(person);
                 await context.SaveChangesAsync();
                 return Results.Ok(person);
-
             });
         }
     }
